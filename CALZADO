@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteo UGEL Huari - Sedes</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f3e5ff 0%, #e0f7ff 100%);
+            margin: 0;
+            padding: 20px;
+            color: #2a2a2a;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #6a1b9a;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+        
+        .ugel-banner {
+            background: linear-gradient(90deg, #6a1b9a, #1565c0);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.4em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .arenga {
+            font-style: italic;
+            font-size: 1.2em;
+            color: #1565c0;
+            margin: 20px 0;
+            padding: 15px;
+            background: #e3f2fd;
+            border-left: 5px solid #42a5f5;
+            border-radius: 5px;
+        }
+        
+        .sedes-list {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .sede-item {
+            background: #f1e8ff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button {
+            background: linear-gradient(90deg, #6a1b9a, #1565c0);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            border-radius: 50px;
+            cursor: pointer;
+            margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #resultados {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 1s;
+        }
+        
+        .emparejamiento {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px auto;
+            max-width: 400px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-left: 5px solid #6a1b9a;
+        }
+        
+        .mensaje-final {
+            font-size: 1.3em;
+            color: #6a1b9a;
+            margin-top: 30px;
+            padding: 15px;
+            background: #f3e5f5;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+        
+        .password-section {
+            margin: 20px 0;
+        }
+        
+        input[type="password"] {
+            padding: 10px;
+            border: 2px solid #7e57c2;
+            border-radius: 5px;
+            width: 200px;
+            font-size: 1em;
+            margin-right: 10px;
+        }
+        
+        .error {
+            color: #d32f2f;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ugel-banner">
+            UGEL HUARI - SORTEO DE EMPAREJAMIENTOS
+        </div>
+        
+        <h1>⚽ Sorteo Categoría A U12</h1>
+        
+        <div class="arenga">
+            "El deporte une comunidades. ¡Que compitan con honor y amistad!"
+        </div>
+        
+        <div class="password-section">
+            <h3>🔒 Ingrese la clave para activar el sorteo:</h3>
+            <input type="password" id="clave" placeholder="Contraseña">
+            <button onclick="verificarClave()">Validar</button>
+            <p id="mensajeError" class="error"></p>
+        </div>
+        
+        <div class="sedes-list">
+            <div class="sede-item">PAUCAS</div>
+            <div class="sede-item">SAN PEDRO DE CHANÁ</div>
+            <div class="sede-item">CHAVÍN DE HUANTAR</div>
+            <div class="sede-item">CAJAY</div>
+        </div>
+        
+        <button id="btnSorteo" disabled onclick="realizarSorteo()">🎯 REALIZAR SORTEO</button>
+        
+        <div id="resultados">
+            <h2 style="color: #6a1b9a;">RESULTADOS DEL SORTEO</h2>
+            <div id="emparejamientos"></div>
+            <div class="mensaje-final">
+                ¡Que comience la competencia!<br>
+                Deseamos una justa y honorable competición para todas las sedes.
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-database.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCG0S9sBISsBYgstqxKzMvmQ43-hmlouPw",
+            authDomain: "sorteo-ugel-huari-u12.firebaseapp.com",
+            databaseURL: "https://sorteo-ugel-huari-u12-default-rtdb.firebaseio.com",
+            projectId: "sorteo-ugel-huari-u12",
+            storageBucket: "sorteo-ugel-huari-u12.appspot.com",
+            messagingSenderId: "470418834890",
+            appId: "1:470418834890:web:fcb1ef47ba8bb6ca3dfb33",
+            measurementId: "G-MWBTLTVFLM"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // CLAVE DE SEGURIDAD
+        const CLAVE_CORRECTA = "JUCASA2025";
+        
+        function verificarClave() {
+            const claveIngresada = document.getElementById("clave").value;
+            const btnSorteo = document.getElementById("btnSorteo");
+            const mensajeError = document.getElementById("mensajeError");
+            
+            if (claveIngresada === CLAVE_CORRECTA) {
+                btnSorteo.disabled = false;
+                mensajeError.textContent = "";
+                alert("✅ Clave correcta. Ahora puede realizar el sorteo.");
+            } else {
+                mensajeError.textContent = "❌ Clave incorrecta. Intente nuevamente.";
+                btnSorteo.disabled = true;
+            }
+        }
+        
+        function realizarSorteo() {
+            document.getElementById("btnSorteo").disabled = true;
+            
+            const sedes = ["PAUCAS", "SAN PEDRO DE CHANÁ", "CHAVÍN DE HUANTAR", "CAJAY"];
+            const sedesMezcladas = [...sedes].sort(() => Math.random() - 0.5);
+            
+            const resultados = {
+                emparejamiento1: `${sedesMezcladas[0]} vs ${sedesMezcladas[1]}`,
+                emparejamiento2: `${sedesMezcladas[2]} vs ${sedesMezcladas[3]}`,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            set(ref(database, 'sorteo/'), resultados)
+                .then(() => {
+                    mostrarResultados(resultados);
+                    alert("Sorteo realizado y guardado correctamente");
+                })
+                .catch(error => {
+                    console.error("Error al guardar:", error);
+                    alert("Hubo un error al guardar el sorteo");
+                    document.getElementById("btnSorteo").disabled = false;
+                });
+        }
+        
+        function mostrarResultados(resultados) {
+            document.getElementById("emparejamientos").innerHTML = `
+                <div class="emparejamiento">EMPAREJAMIENTO 1: ${resultados.emparejamiento1}</div>
+                <div class="emparejamiento">EMPAREJAMIENTO 2: ${resultados.emparejamiento2}</div>
+                <div class="emparejamiento" style="font-size:0.8em">Realizado el: ${resultados.timestamp}</div>
+            `;
+            document.getElementById("resultados").style.display = "block";
+            document.getElementById("resultados").scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function escucharSorteo() {
+            onValue(ref(database, 'sorteo/'), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    mostrarResultados(data);
+                }
+            });
+        }
+        
+        // Iniciar escucha al cargar la página
+        window.addEventListener('DOMContentLoaded', (event) => {
+            escucharSorteo();
+        });
+    </script>
+</body>
+</html>
